@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import ru.sklyarov.spring.security.entities.Authority;
 import ru.sklyarov.spring.security.entities.Role;
 import ru.sklyarov.spring.security.entities.User;
 import ru.sklyarov.spring.security.repositories.UserRepository;
@@ -32,11 +33,18 @@ public class UserService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(String.format("User '%s' not found",username)));
+        User user = findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(String.format("User '%s' not found", username)));
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), mapRolesToAuthorities(user.getRoles()));
     }
 
-    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<Role> roles){
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<Role> roles) {
+        Collection<SimpleGrantedAuthority> sga;
+        sga = roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+        Collection<SimpleGrantedAuthority> sgr;
+        sgr = roles.stream()
+                .map(role -> role.getAuthoritiesList().stream().map(SimpleGrantedAuthority::new).findFirst().orElseThrow()).collect(Collectors.toList());
+
+        sga.addAll(sgr);
+        return sga;
     }
 }

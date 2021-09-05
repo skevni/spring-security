@@ -7,6 +7,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @NoArgsConstructor
@@ -26,4 +28,9 @@ public class Role {
     @JoinTable(name = "roles_authorities", joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "authority_id"))
     private Collection<Authority> authorities;
+
+    public List<String> getAuthoritiesList(){
+        return authorities.stream().map(Authority::getName).collect(Collectors.toList());
+    }
+
 }

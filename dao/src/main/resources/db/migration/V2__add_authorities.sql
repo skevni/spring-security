@@ -1,8 +1,8 @@
 create table authorities
 (
     id   bigserial,
-    name varchar(50) not null
-        primary key (id)
+    name varchar(50) not null,
+    primary key (id)
 );
 
 create table roles_authorities
@@ -19,7 +19,7 @@ VALUES ('ReadProduct'),
        ('ModifyProduct'),
        ('CreateProduct');
 
-insert into roles_authorities (user_id, authority_id)
+insert into roles_authorities (role_id, authority_id)
 values (1, 1),
        (2, 1),
        (2, 2),
