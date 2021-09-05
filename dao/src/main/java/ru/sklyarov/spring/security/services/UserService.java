@@ -13,8 +13,7 @@ import ru.sklyarov.spring.security.entities.User;
 import ru.sklyarov.spring.security.repositories.UserRepository;
 
 import javax.transaction.Transactional;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,9 +33,11 @@ public class UserService implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(String.format("User '%s' not found", username)));
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), mapRolesToAuthorities(user.getRoles()));
+//        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), mapRolesToAuthorities(user.getRoles()));
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), getGrantedAuthorities(getAuthorities(user.getRoles())));
     }
 
+    // Раюочий метод, но какой-то ужасный. Лучше делать с помощью getGrantedAuthorities?
     private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<Role> roles) {
         Collection<SimpleGrantedAuthority> sga;
         sga = roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
@@ -46,5 +47,25 @@ public class UserService implements UserDetailsService {
 
         sga.addAll(sgr);
         return sga;
+    }
+
+    private List<String> getAuthorities(Collection<Role> roles) {
+        List<String> authorities = new ArrayList<>();
+        List<Authority> authCollections = new ArrayList<>();
+
+        for (Role role : roles) {
+            authorities.add(role.getName());
+            authCollections.addAll(role.getAuthorities());
+        }
+
+        for (Authority authority: authCollections) {
+            authorities.add(authority.getName());
+        }
+
+        return authorities;
+    }
+
+    private Collection<? extends GrantedAuthority> getGrantedAuthorities(List<String> authorities){
+        return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 }
